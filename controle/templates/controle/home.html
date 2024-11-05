@@ -55,7 +55,7 @@
             <tr>
                 <td>{{ transacao.data|date:"d/M/y" }}</td>
                 <td>{{ transacao.tipo }}</td>
-                <td>{{ transacao.categoria }}</td>
+                <td>{{ transacao.categoria.nome }}</td>
                 <td>R$ {{ transacao.valor }}</td>
                 <td>{{ transacao.conta.nome }}</td>
                 <td>
@@ -79,6 +79,7 @@
 <div>
 <a href="{% url 'cadastrar_conta' %}">Cadastrar Conta</a>
 <a href="{% url 'registrar_transacao' %}">Registrar Transação</a>
+<a href="{% url 'cadastrar_categoria' %}" class="btn btn-primary">Cadastrar Categoria</a>
 <a href="{% url 'logout' %}">Logout</a>
 
 </div>

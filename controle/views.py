@@ -5,17 +5,18 @@ from datetime import date
 from django.db.models import Sum
 from django.contrib.auth.forms import AuthenticationForm
 
-from .models import Conta, Transacao
-from .forms import ContaForm, TransacaoForm
+from .models import Conta, Transacao, Categoria
+from .forms import ContaForm, TransacaoForm, CategoriaForm
 
 
 def home(request):
     if request.user.is_authenticated:
         contas = Conta.objects.filter(usuario=request.user)
+        conta = None
         for conta in contas:
             # Calcular receitas e despesas para cada conta
-            receitas = Transacao.objects.filter(conta=conta, tipo='REC').aggregate(Sum('valor'))['valor__sum'] or 0
-            despesas = Transacao.objects.filter(conta=conta, tipo='DSP').aggregate(Sum('valor'))['valor__sum'] or 0
+            receitas = Transacao.objects.filter(conta=conta, categoria__tipo='REC').aggregate(Sum('valor'))['valor__sum'] or 0
+            despesas = Transacao.objects.filter(conta=conta, categoria__tipo='DSP').aggregate(Sum('valor'))['valor__sum'] or 0
             conta.saldo = receitas - despesas  # Saldo da conta 
 
         saldo_atual = sum([
@@ -25,12 +26,14 @@ def home(request):
         ])
         
 
-        receitas_mes = Transacao.objects.filter(conta=conta, tipo='REC').aggregate(Sum('valor'))['valor__sum'] or 0
+        receitas_mes = Transacao.objects.filter(conta=conta, categoria__tipo='REC').aggregate(Sum('valor'))['valor__sum'] or 0
 
-        despesas_mes = Transacao.objects.filter(conta=conta, tipo='DSP').aggregate(Sum('valor'))['valor__sum'] or 0
+        despesas_mes = Transacao.objects.filter(conta=conta, categoria__tipo='DSP').aggregate(Sum('valor'))['valor__sum'] or 0
 
         transacoes = Transacao.objects.filter(conta__usuario=request.user)
         print(transacoes)
+
+        
         
         if request.method == 'POST' and 'excluir_transacao_id' in request.POST:
             transacao_id = request.POST.get('excluir_transacao_id')
@@ -90,7 +93,7 @@ def excluir_transacao(request, transacao_id):
     if request.user.is_authenticated:
         try:
             # Obtém a transação pelo ID
-            transacao = get_object_or_404(Transacao, pk=transacao_id)
+            transacao = get_object_or_404(Transacao, pk=transacao_id,  conta__usuario=request.user)
             
             # Verifica se a transação pertence a uma conta do usuário autenticado
             if transacao.conta.usuario != request.user:
@@ -122,3 +125,13 @@ def login_usuario(request):
     else:
         form = AuthenticationForm()
     return render(request, 'controle/login.html', {'form': form})
+
+def cadastrar_categoria(request):
+    if request.method == 'POST':
+        form = CategoriaForm(request.POST)
+        if form.is_valid():
+            form.save()  # Salva a nova categoria
+            return redirect('home')  # Redireciona para a página inicial
+    else:
+        form = CategoriaForm()  # Cria uma instância vazia do formulário
+    return render(request, 'controle/cadastrar_categoria.html', {'form': form})
