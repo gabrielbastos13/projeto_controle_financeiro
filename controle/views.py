@@ -62,7 +62,7 @@ def cadastrar_usuario(request):
             return redirect('home')
     else:
         form = UserCreationForm()
-    return render(request, 'controle/login.html', {'form': form})
+    return render(request, 'controle/cadastrar_usuario.html', {'form': form})
 
 
 def cadastrar_conta(request):
